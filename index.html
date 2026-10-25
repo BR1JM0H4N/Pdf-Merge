@@ -9,86 +9,39 @@
   <script src="./pdf-lib.min.js"></script>
   <style>
 :root {
-    --primary: var(--md-primary, #47673A);
-    --onPrimary: var(--md-onPrimary, #ECFFDE);
-    --primaryContainer: var(--md-primaryContainer, #C7EEB3);
-    --onPrimaryContainer: var(--md-onPrimaryContainer, #3A5A2D);
-
-    --secondary: var(--md-secondary, #55634D);
-    --onSecondary: var(--md-onSecondary, #EEFEE1);
-    --secondaryContainer: var(--md-secondaryContainer, #D8E7CC);
-    --onSecondaryContainer: var(--md-onSecondaryContainer, #485641);
-
-    --tertiary: var(--md-tertiary, #64612A);
-    --onTertiary: var(--md-onTertiary, #FFFAD4);
-    --tertiaryContainer: var(--md-tertiaryContainer, #F9F4AE);
-    --onTertiaryContainer: var(--md-onTertiaryContainer, #5F5C26);
-
-    --error: var(--md-error, #B3261E);
-    --onError: var(--md-onError, #FFFFFF);
-    --errorContainer: var(--md-errorContainer, #F9DEDC);
-    --onErrorContainer: var(--md-onErrorContainer, #410E0B);
-
-    --surface: var(--md-surface, #F9FAF2);
-    --onSurface: var(--md-onSurface, #2E342A);
-    --surfaceVariant: var(--md-surfaceVariant, #DFE5D6);
-    --onSurfaceVariant: var(--md-onSurfaceVariant, #5B6156);
-
-    --surfaceContainerLowest: var(--md-surfaceContainerLowest, #FFFFFF);
-    --surfaceContainerLow: var(--md-surfaceContainerLow, #F2F5EA);
-    --surfaceContainer: var(--md-surfaceContainer, #EBEFE4);
-    --surfaceContainerHigh: var(--md-surfaceContainerHigh, #E5EADD);
-    --surfaceContainerHighest: var(--md-surfaceContainerHighest, #DFE5D6);
-    --surfaceDim: var(--md-surfaceDim, #D6DCCE);
-    --surfaceBright: var(--md-surfaceBright, #F9FAF2);
-
-    --outline: var(--md-outline, #777D71);
-    --outlineVariant: var(--md-outlineVariant, #CAC4D0);
-
-    --shadow: 0 1px 3px rgba(40,60,30,.18), 0 4px 12px rgba(40,60,30,.12);
-    --shadow-hi: 0 8px 28px rgba(40,60,30,.28);
-
-    color-scheme: light;
-    box-sizing: border-box;
-    padding-top: var(--safe-area-inset-top, 0px);
-    padding-bottom: var(--safe-area-inset-bottom, 0px);
+    --primary: var(--md-primary, #ACD299);
+    --onPrimary: var(--md-onPrimary, #173807);
+    --primaryContainer: var(--md-primaryContainer, #2F4F22);
+    --onPrimaryContainer: var(--md-onPrimaryContainer, #C7EEB3);
+    --secondary: var(--md-secondary, #BCCBB1);
+    --onSecondary: var(--md-onSecondary, #283421);
+    --secondaryContainer: var(--md-secondaryContainer, #3E4B37);
+    --onSecondaryContainer: var(--md-onSecondaryContainer, #D8E7CC);
+    --tertiary: var(--md-tertiary, #CFCB7E);
+    --onTertiary: var(--md-onTertiary, #333100);
+    --tertiaryContainer: var(--md-tertiaryContainer, #4B4811);
+    --onTertiaryContainer: var(--md-onTertiaryContainer, #F9F4AE);
+    --error: var(--md-error, #F2B8B5);
+    --onError: var(--md-onError, #601410);
+    --errorContainer: var(--md-errorContainer, #8C1D18);
+    --onErrorContainer: var(--md-onErrorContainer, #F9DEDC);
+    --surface: var(--md-surface, #11140F);
+    --onSurface: var(--md-onSurface, #E2E3DA);
+    --surfaceVariant: var(--md-surfaceVariant, #424940);
+    --onSurfaceVariant: var(--md-onSurfaceVariant, #C2C8BC);
+    --surfaceContainerLowest: var(--md-surfaceContainerLowest, #0C0F0A);
+    --surfaceContainerLow: var(--md-surfaceContainerLow, #191D16);
+    --surfaceContainer: var(--md-surfaceContainer, #1D211A);
+    --surfaceContainerHigh: var(--md-surfaceContainerHigh, #272B24);
+    --surfaceContainerHighest: var(--md-surfaceContainerHighest, #32362E);
+    --surfaceDim: var(--md-surfaceDim, #11140F);
+    --surfaceBright: var(--md-surfaceBright, #373B33);
+    --outline: var(--md-outline, #8C9387);
+    --outlineVariant: var(--md-outlineVariant, #424940);
+    --shadow: 0 1px 3px rgba(0,0,0,.5), 0 4px 12px rgba(0,0,0,.35);
+    --shadow-hi: 0 8px 28px rgba(0,0,0,.6);
+    color-scheme: dark;
   }
-    @media (prefers-color-scheme: dark) {
-:root:not([data-theme="light"]) {
-      --primary: var(--md-primary, #ACD299);
-      --onPrimary: var(--md-onPrimary, #173807);
-      --primaryContainer: var(--md-primaryContainer, #2F4F22);
-      --onPrimaryContainer: var(--md-onPrimaryContainer, #C7EEB3);
-      --secondary: var(--md-secondary, #BCCBB1);
-      --onSecondary: var(--md-onSecondary, #283421);
-      --secondaryContainer: var(--md-secondaryContainer, #3E4B37);
-      --onSecondaryContainer: var(--md-onSecondaryContainer, #D8E7CC);
-      --tertiary: var(--md-tertiary, #CFCB7E);
-      --onTertiary: var(--md-onTertiary, #333100);
-      --tertiaryContainer: var(--md-tertiaryContainer, #4B4811);
-      --onTertiaryContainer: var(--md-onTertiaryContainer, #F9F4AE);
-      --error: var(--md-error, #F2B8B5);
-      --onError: var(--md-onError, #601410);
-      --errorContainer: var(--md-errorContainer, #8C1D18);
-      --onErrorContainer: var(--md-onErrorContainer, #F9DEDC);
-      --surface: var(--md-surface, #11140F);
-      --onSurface: var(--md-onSurface, #E2E3DA);
-      --surfaceVariant: var(--md-surfaceVariant, #424940);
-      --onSurfaceVariant: var(--md-onSurfaceVariant, #C2C8BC);
-      --surfaceContainerLowest: var(--md-surfaceContainerLowest, #0C0F0A);
-      --surfaceContainerLow: var(--md-surfaceContainerLow, #191D16);
-      --surfaceContainer: var(--md-surfaceContainer, #1D211A);
-      --surfaceContainerHigh: var(--md-surfaceContainerHigh, #272B24);
-      --surfaceContainerHighest: var(--md-surfaceContainerHighest, #32362E);
-      --surfaceDim: var(--md-surfaceDim, #11140F);
-      --surfaceBright: var(--md-surfaceBright, #373B33);
-      --outline: var(--md-outline, #8C9387);
-      --outlineVariant: var(--md-outlineVariant, #424940);
-      --shadow: 0 1px 3px rgba(0,0,0,.5), 0 4px 12px rgba(0,0,0,.35);
-      --shadow-hi: 0 8px 28px rgba(0,0,0,.6);
-      color-scheme: dark;
-    }
-    }
 
     *,*::before,*::after {
       box-sizing: border-box;
