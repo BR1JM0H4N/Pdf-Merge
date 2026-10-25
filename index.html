@@ -1,0 +1,841 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0C0F0A">
+  <title>Merge PDFs</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+  <style>
+:root {
+    --bg: var(--md-surfaceVariant, #22271E);
+    --fg: var(--md-onSurface, #E2E8D9);
+    --mut: var(--md-onSurfaceVariant, #A7ADA0);
+    --card: var(--md-surfaceContainer, #161B14);
+    --surface: var(--md-surface, #0C0F0A);
+    --surface-container: var(--card);
+    --surface-high: var(--md-surfaceContainerHigh, #1C2119);
+    --line: var(--md-outlineVariant, #49454F);
+    --outline: var(--line);
+    --acc: var(--md-secondary, #BCCBB1);
+    --accfg: var(--bg);
+    --acc-container: var(--md-secondaryContainer, #374430);
+    --on-acc-container: var(--fg);
+    --track: var(--acc-container);
+    --err: var(--md-error, #F2B8B5);
+    box-sizing: border-box;
+    padding-top: var(--safe-area-inset-top, 0px);
+    padding-bottom: var(--safe-area-inset-bottom, 0px);
+  }
+    *,*::before,*::after {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent
+    }
+    html,body {
+      margin: 0;
+      background: var(--surface);
+      color: var(--fg);
+      font: 400 16px/1.45 Roboto,"Google Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+      -webkit-font-smoothing: antialiased
+      scroll-behavior: smooth
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .safe-bottom-patch {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: calc(var(--safe-area-inset-bottom, 0px));
+      background-color: var(--surface);
+      z-index: 9999;
+      pointer-events: none;
+    }
+
+
+    button {
+      font: inherit;
+      color: inherit;
+      border: 0;
+      background: none;
+      cursor: pointer
+    }
+    svg {
+      width: 24px;
+      height: 24px;
+      fill: currentColor;
+      flex: none
+    }
+    .app {
+      max-width: 560px;
+      margin: 0 auto;
+      padding: 28px 16px 168px
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px
+    }
+    .logo {
+      width: 56px;
+      height: 56px;
+      border-radius: 18px;
+      background: var(--acc-container);
+      color: var(--acc);
+      display: grid;
+      place-items: center
+    }
+    .logo svg {
+      width: 30px;
+      height: 30px
+    }
+    h1 {
+      margin: 0;
+      font-size: 28px;
+      line-height: 1.15;
+      font-weight: 500;
+      letter-spacing: -.2px
+    }
+    header p {
+      margin: 2px 0 0;
+      color: var(--mut);
+      font-size: 14px
+    }
+
+    .drop {
+      display: block;
+      position: relative;
+      border-radius: 28px;
+      background: var(--card);
+      border: 1.5px dashed var(--line);
+      padding: 28px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: background .2s,border-color .2s,transform .15s
+    }
+    .drop:hover,.drop.over {
+      background: var(--surface-high);
+      border-color: var(--acc)
+    }
+    .drop:active {
+      transform: scale(.985)
+    }
+    .drop input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%
+    }
+    .drop .plus {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 14px;
+      border-radius: 22px;
+      background: var(--acc);
+      color: var(--accfg);
+      display: grid;
+      place-items: center
+    }
+    .drop .plus svg {
+      width: 30px;
+      height: 30px
+    }
+    .drop b {
+      display: block;
+      font-weight: 500;
+      font-size: 18px
+    }
+    .drop span {
+      color: var(--mut);
+      font-size: 14px
+    }
+    .compact {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      text-align: left;
+      padding: 14px 18px
+    }
+    .compact .plus {
+      margin: 0;
+      width: 44px;
+      height: 44px;
+      border-radius: 15px
+    }
+    .compact .plus svg {
+      width: 24px;
+      height: 24px
+    }
+    .compact b {
+      font-size: 16px
+    }
+
+    .sec {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 28px 4px 10px
+    }
+    .sec h2 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 500
+    }
+    .sec small {
+      display: block;
+      color: var(--mut);
+      font-size: 13px;
+      margin-top: 1px
+    }
+    .txt {
+      color: var(--acc);
+      font-weight: 500;
+      font-size: 14px;
+      padding: 8px 14px;
+      border-radius: 20px;
+      transition: background .2s
+    }
+    .txt:hover {
+      background: var(--acc-container)
+    }
+
+    #list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px
+    }
+    .item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 6px 10px 10px;
+      background: var(--surface-high);
+      border-radius: 22px;
+      border: 1px solid transparent;
+      transition: box-shadow .2s,transform .2s,border-color .2s,background .2s;
+      animation: in .3s ease both
+    }
+    @keyframes in {
+      from {
+        opacity: 0;
+        transform: translateY(8px)
+      }
+
+      to {
+        opacity: 1;
+        transform: none
+      }}
+    .item.drag {
+      background: var(--acc-container);
+      border-color: var(--acc);
+      transform: scale(1.025);
+      box-shadow: 0 12px 32px rgba(0,0,0,.55);
+      z-index: 3;
+      position: relative
+    }
+    .item.bad {
+      border-color: color-mix(in srgb,var(--err) 45%,transparent)
+    }
+    .idx {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--acc-container);
+      color: var(--on-acc-container);
+      display: grid;
+      place-items: center;
+      font-size: 13px;
+      font-weight: 500;
+      flex: none
+    }
+    .item.drag .idx {
+      background: var(--acc);
+      color: var(--accfg)
+    }
+    .item.bad .idx {
+      background: transparent;
+      color: var(--err)
+    }
+    .ico {
+      width: 44px;
+      height: 52px;
+      border-radius: 10px;
+      background: var(--bg);
+      color: var(--acc);
+      display: grid;
+      place-items: center;
+      position: relative;
+      flex: none;
+      overflow: hidden
+    }
+    .ico::after {
+      content: "PDF";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--acc);
+      color: var(--accfg);
+      font-size: 9px;
+      font-weight: 700;
+      text-align: center;
+      line-height: 14px;
+      letter-spacing: .5px
+    }
+    .ico svg {
+      width: 22px;
+      height: 22px;
+      margin-bottom: 12px
+    }
+    .info {
+      flex: 1;
+      min-width: 0
+    }
+    .name {
+      font-weight: 500;
+      font-size: 15px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis
+    }
+    .meta {
+      color: var(--mut);
+      font-size: 13px
+    }
+    .bad .meta {
+      color: var(--err)
+    }
+    .ib {
+      width: 40px;
+      height: 44px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: var(--mut);
+      transition: background .2s,color .2s;
+      flex: none
+    }
+    .ib:hover {
+      background: var(--acc-container);
+      color: var(--fg)
+    }
+    .grip {
+      touch-action: none;
+      cursor: grab;
+      width: 36px
+    }
+    .drag .grip {
+      cursor: grabbing;
+      color: var(--acc)
+    }
+    .spin {
+      width: 18px;
+      height: 18px;
+      border: 2.5px solid var(--track);
+      border-top-color: var(--acc);
+      border-radius: 50%;
+      animation: r .8s linear infinite;
+      display: inline-block;
+      vertical-align: -3px;
+      margin-right: 6px
+    }
+    @keyframes r {
+      to {
+        transform: rotate(360deg)
+      }}
+    .hint {
+      color: var(--mut);
+      font-size: 13px;
+      text-align: center;
+      margin-top: 14px
+    }
+
+    .bar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 5;
+      padding: 14px 16px calc(14px + env(safe-area-inset-bottom,0px));
+      background: color-mix(in srgb,var(--surface-container) 92%,transparent);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-radius: 28px 28px 0 0;
+      border-top: 1px solid var(--line);
+      transform: translateY(110%);
+      transition: transform .35s cubic-bezier(.2,.8,.2,1)
+    }
+    .bar.show {
+      transform: none
+    }
+    .bar-in {
+      max-width: 560px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 16px
+    }
+    .sum {
+      flex: 1;
+      min-width: 0
+    }
+    .sum b {
+      display: block;
+      font-weight: 500;
+      font-size: 16px
+    }
+    .sum span {
+      color: var(--mut);
+      font-size: 13px
+    }
+    .fab {
+      height: 56px;
+      padding: 0 24px 0 20px;
+      border-radius: 28px;
+      background: var(--acc);
+      color: var(--accfg);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 500;
+      font-size: 16px;
+      transition: transform .15s,opacity .2s,box-shadow .2s;
+      box-shadow: 0 4px 14px rgba(0,0,0,.35)
+    }
+    .fab:active {
+      transform: scale(.96)
+    }
+    .fab:disabled {
+      opacity: .38;
+      box-shadow: none;
+      cursor: not-allowed
+    }
+
+    .scrim {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      background: rgba(5,8,4,.72);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 16px
+    }
+    .scrim.show {
+      display: flex
+    }
+    .sheet {
+      width: 100%;
+      max-width: 520px;
+      background: var(--surface-high);
+      border-radius: 32px;
+      padding: 28px 24px 24px;
+      border: 1px solid var(--line);
+      animation: up .4s cubic-bezier(.2,.8,.2,1) both
+    }
+    @keyframes up {
+      from {
+        transform: translateY(40px);
+        opacity: 0
+      }
+
+      to {
+        transform: none;
+        opacity: 1
+      }}
+    .sheet .top {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 22px
+    }
+    .badge {
+      width: 52px;
+      height: 52px;
+      border-radius: 18px;
+      background: var(--acc-container);
+      color: var(--acc);
+      display: grid;
+      place-items: center;
+      flex: none;
+      transition: background .3s,color .3s
+    }
+    .badge.ok {
+      background: var(--acc);
+      color: var(--accfg)
+    }
+    .badge.er {
+      background: color-mix(in srgb,var(--err) 22%,transparent);
+      color: var(--err)
+    }
+    .sheet h3 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 500
+    }
+    .sheet p {
+      margin: 2px 0 0;
+      color: var(--mut);
+      font-size: 14px;
+      overflow-wrap: anywhere
+    }
+    .pct {
+      margin-left: auto;
+      font-size: 26px;
+      font-weight: 500;
+      font-variant-numeric: tabular-nums
+    }
+    .track {
+      height: 12px;
+      border-radius: 6px;
+      background: var(--track);
+      overflow: hidden
+    }
+    .fill {
+      height: 100%;
+      width: 0;
+      border-radius: 6px;
+      background: var(--acc);
+      transition: width .45s cubic-bezier(.3,.7,.2,1);
+      position: relative;
+      overflow: hidden
+    }
+    .fill::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);
+      transform: translateX(-100%);
+      animation: sh 1.3s infinite
+    }
+    .done .fill::after {
+      display: none
+    }
+    @keyframes sh {
+      to {
+        transform: translateX(100%)
+      }}
+    .steps {
+      display: flex;
+      justify-content: space-between;
+      color: var(--mut);
+      font-size: 13px;
+      margin-top: 10px
+    }
+    .acts {
+      display: none;
+      gap: 10px;
+      margin-top: 24px
+    }
+    .done .acts,.fail .acts {
+      display: flex
+    }
+    .btn {
+      flex: 1;
+      height: 52px;
+      border-radius: 26px;
+      font-weight: 500;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: transform .15s,background .2s
+    }
+    .btn:active {
+      transform: scale(.97)
+    }
+    .btn.p {
+      background: var(--acc);
+      color: var(--accfg)
+    }
+    .btn.s {
+      background: var(--acc-container);
+      color: var(--on-acc-container)
+    }
+    .fail .fill {
+      background: var(--err)
+    }
+    .fail .fill::after {
+      display: none
+    }
+    @media (prefers-reduced-motion:reduce) {
+      * {
+        animation: none!important;
+        transition: none!important
+      }}
+  </style>
+</head>
+<body>
+  <svg style="display:none">
+    <symbol id="i-merge" viewBox="0 0 24 24"><path d="M17 20.41 18.41 19 15 15.59 13.59 17 17 20.41zM7.5 8H11v5.59L5.59 19 7 20.41l6-6V8h3.5L12 3.5 7.5 8z" /></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" /></symbol>
+    <symbol id="i-doc" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 7V3.5L18.5 9H13z" /></symbol>
+    <symbol id="i-grip" viewBox="0 0 24 24"><path d="M9 4a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm6 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM9 10a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm6 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM9 16a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm6 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4z" /></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" /></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z" /></symbol>
+    <symbol id="i-dl" viewBox="0 0 24 24"><path d="M5 20h14v-2H5v2zM19 9h-4V3H9v6H5l7 7 7-7z" /></symbol>
+    <symbol id="i-warn" viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" /></symbol>
+  </svg>
+
+  <main class="app">
+    <header>
+      <div class="logo">
+        <svg><use href="#i-merge" /></svg>
+      </div>
+      <div>
+        <h1>Merge PDFs</h1><p>
+          Combine files into one, right on this device
+        </p>
+      </div>
+    </header>
+
+    <label class="drop" id="drop">
+      <input id="pick" type="file" accept="application/pdf,.pdf" multiple>
+      <div class="plus">
+        <svg><use href="#i-plus" /></svg>
+      </div>
+      <b>Select PDF files</b>
+      <span>Tap to browse, or drop files here</span>
+    </label>
+
+    <section id="listWrap" hidden>
+      <div class="sec">
+        <div>
+          <h2>Merge order</h2><small>Drag the handle to reorder</small>
+        </div>
+        <button class="txt" id="clear">Clear all</button>
+      </div>
+      <div id="list"></div>
+      <p class="hint">
+        Files are merged top to bottom. Nothing leaves your device.
+      </p>
+    </section>
+    <div class="safe-bottom-patch"></div>
+  </main>
+
+  <div class="bar" id="bar">
+    <div class="bar-in">
+      <div class="sum">
+        <b id="sumA"></b><span id="sumB"></span>
+      </div>
+      <button class="fab" id="go"><svg><use href="#i-merge" /></svg>Merge</button>
+    </div>
+  </div>
+
+  <div class="scrim" id="scrim">
+    <div class="sheet" id="sheet">
+      <div class="top">
+        <div class="badge" id="badge">
+          <svg><use href="#i-merge" /></svg>
+        </div>
+        <div style="min-width:0">
+          <h3 id="sTitle">Merging…</h3><p id="sSub"></p>
+        </div>
+        <div class="pct" id="pct">
+          0%
+        </div>
+      </div>
+      <div class="track">
+        <div class="fill" id="fill"></div>
+      </div>
+      <div class="steps">
+        <span id="stepL"></span><span id="stepR"></span>
+      </div>
+      <div class="acts">
+        <button class="btn s" id="again">Start over</button>
+        <button class="btn p" id="save"><svg><use href="#i-dl" /></svg>Save PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = s => document.querySelector(s);
+    const list = $('#list'), bar = $('#bar'), sheet = $('#sheet');
+    let files = [], uid = 0, busy = false, outBlob = null, outName = '';
+
+    const fmt = b => b < 1048576 ? Math.max(1, Math.round(b / 1024)) + ' KB': (b / 1048576).toFixed(1) + ' MB';
+    const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot; '}[c]));
+      const tick = () => new Promise(r => setTimeout(r, 60));
+      const ok = () => files.filter(f => f.pages);
+
+      async function addFiles(fl) {
+        const pdfs = [...fl].filter(f => /pdf$/i.test(f.type) || /\.pdf$/i.test(f.name));
+        for (const f of pdfs) {
+          const it = {
+            id: ++uid,
+            file: f,
+            pages: null,
+            err: null,
+            loading: true
+          };
+          files.push(it); render();
+          try {
+            const d = await PDFLib.PDFDocument.load(await f.arrayBuffer());
+            it.pages = d.getPageCount();
+          } catch (x) {
+            it.err = /encrypt/i.test(x.message) ? 'Password protected, can’t merge': 'Can’t read this file';
+          }
+          it.loading = false; render();
+        }
+      }
+      $('#pick').onchange = e => {
+        const l = e.target.files; addFiles(l); setTimeout(() => e.target.value = '', 0);
+      };
+      const drop = $('#drop');
+      ['dragenter', 'dragover'].forEach(n => drop.addEventListener(n, e => {
+        e.preventDefault(); drop.classList.add('over');
+      }));
+      ['dragleave', 'drop'].forEach(n => drop.addEventListener(n, e => {
+        e.preventDefault(); drop.classList.remove('over');
+      }));
+      drop.addEventListener('drop', e => addFiles(e.dataTransfer.files));
+
+      function render() {
+        $('#listWrap').hidden = !files.length;
+        drop.classList.toggle('compact', !!files.length);
+        drop.querySelector('b').textContent = files.length ? 'Add more PDFs': 'Select PDF files';
+        drop.querySelector('span').hidden = !!files.length;
+        list.innerHTML = files.map((f, i) => `
+          <div class="item${f.err ? ' bad': ''}" data-id="${f.id}">
+          <div class="idx">${f.err ? '!': i + 1}</div>
+          <div class="ico"><svg><use href="#i-doc"/></svg></div>
+          <div class="info">
+          <div class="name">${esc(f.file.name)}</div>
+          <div class="meta">${f.loading ? '<i class="spin"></i>Reading…': f.err ? esc(f.err): f.pages + (f.pages === 1 ? ' page': ' pages') + ' • ' + fmt(f.file.size)}</div>
+          </div>
+          <button class="ib" data-rm="${f.id}" aria-label="Remove ${esc(f.file.name)}"><svg><use href="#i-x"/></svg></button>
+          <div class="ib grip" aria-label="Drag to reorder"><svg><use href="#i-grip"/></svg></div>
+          </div>`).join('');
+        const g = ok(),
+        pages = g.reduce((a, f) => a + f.pages, 0),
+        size = g.reduce((a, f) => a + f.file.size, 0);
+        $('#sumA').textContent = g.length ? g.length + (g.length === 1 ? ' file': ' files') + ' • ' + pages + ' pages': 'No valid files';
+        $('#sumB').textContent = g.length < 2 ? 'Add at least 2 PDFs to merge': 'About ' + fmt(size) + ' combined';
+        $('#go').disabled = g.length < 2 || files.some(f => f.loading);
+        bar.classList.toggle('show', files.length > 0);
+      }
+
+      list.addEventListener('click', e => {
+        const b = e.target.closest('[data-rm]');
+        if (b && !busy) {
+          files = files.filter(f => f.id !== +b.dataset.rm); render();
+        }
+      });
+      $('#clear').onclick = () => {
+        if (!busy) {
+          files = []; render();
+        }
+      };
+
+      list.addEventListener('pointerdown', e => {
+        const h = e.target.closest('.grip');
+        if (!h || busy) return;
+        e.preventDefault();
+        const el = h.closest('.item');
+        el.classList.add('drag');
+        if (navigator.vibrate) navigator.vibrate(10);
+        const mv = ev => {
+          const y = ev.clientY,
+          p = el.previousElementSibling,
+          n = el.nextElementSibling;
+          if (p) {
+            const r = p.getBoundingClientRect(); if (y < r.top + r.height / 2) list.insertBefore(el, p);
+          }
+          if (n) {
+            const r = n.getBoundingClientRect(); if (y > r.top + r.height / 2) list.insertBefore(n, el);
+          }
+          if (y > innerHeight - 150) scrollBy(0, 10); else if (y < 90) scrollBy(0, -10);
+        };
+        const up = () => {
+          removeEventListener('pointermove', mv); removeEventListener('pointerup', up); removeEventListener('pointercancel', up);
+          const order = [...list.children].map(c => +c.dataset.id);
+          files.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+          render();
+        };
+        addEventListener('pointermove', mv); addEventListener('pointerup', up); addEventListener('pointercancel', up);
+      });
+
+      function setP(pct, title, sub, l, r) {
+        $('#fill').style.width = pct + '%';
+        $('#pct').textContent = Math.round(pct) + '%';
+        if (title) $('#sTitle').textContent = title;
+        if (sub !== undefined) $('#sSub').textContent = sub;
+        if (l !== undefined) $('#stepL').textContent = l;
+        if (r !== undefined) $('#stepR').textContent = r;
+      }
+      function download() {
+        if (!outBlob) return;
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(outBlob); a.download = outName;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+      }
+
+      async function merge() {
+        const use = ok();
+        if (use.length < 2 || busy) return;
+        busy = true; outBlob = null;
+        sheet.className = 'sheet';
+        $('#save').innerHTML = '<svg><use href="#i-dl"/></svg>Save PDF';
+        $('#badge').className = 'badge';
+        $('#badge').innerHTML = '<svg><use href="#i-merge"/></svg>';
+        $('#scrim').classList.add('show');
+        setP(0, 'Merging…', 'Getting started', '', '');
+        await tick();
+        try {
+          const out = await PDFLib.PDFDocument.create();
+          let done = 0; const total = use.reduce((a, f) => a + f.pages, 0);
+          for (let i = 0; i < use.length; i++) {
+            const f = use[i];
+            setP(done / total * 92, 'Merging…', f.file.name, 'File ' + (i + 1) + ' of ' + use.length, done + ' / ' + total + ' pages');
+            await tick();
+            const src = await PDFLib.PDFDocument.load(await f.file.arrayBuffer());
+            const pages = await out.copyPages(src, src.getPageIndices());
+            pages.forEach(p => out.addPage(p));
+            done += f.pages;
+          }
+          setP(95, 'Saving…', 'Building the final file', 'Almost done', total + ' pages');
+          await tick();
+          const bytes = await out.save();
+          outBlob = new Blob([bytes], {
+            type: 'application/pdf'
+          });
+          const d = new Date(),
+          z = n => String(n).padStart(2, '0');
+          outName = 'merged-' + d.getFullYear() + z(d.getMonth() + 1) + z(d.getDate()) + '-' + z(d.getHours()) + z(d.getMinutes()) + '.pdf';
+          setP(100, 'Merged', outName + ' • ' + fmt(outBlob.size), 'Complete', total + ' pages');
+          sheet.classList.add('done');
+          $('#badge').className = 'badge ok';
+          $('#badge').innerHTML = '<svg><use href="#i-check"/></svg>';
+          download();
+        } catch (x) {
+          sheet.classList.add('fail');
+          $('#save').textContent = 'Close';
+          $('#badge').className = 'badge er';
+          $('#badge').innerHTML = '<svg><use href="#i-warn"/></svg>';
+          setP(100, 'Merge failed', x.message || 'Something went wrong. Try fewer or smaller files.', '', '');
+        }
+      }
+      $('#go').onclick = merge;
+      $('#save').onclick = () => {
+        if (sheet.classList.contains('fail')) {
+          busy = false; $('#scrim').classList.remove('show'); return;
+        }
+        download();
+      };
+      $('#again').onclick = () => {
+        busy = false; outBlob = null; files = []; $('#scrim').classList.remove('show'); render();
+      };
+      render();
+    </script>
+    </body>
+  </html>
