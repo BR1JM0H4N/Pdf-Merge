@@ -924,6 +924,15 @@ jobs:
             function apply(palette) {
               if (!palette) return;
 
+              var L = function (h) { var n = parseInt(h.slice(1), 16);
+                return .2126*(n>>16&255) + .7152*(n>>8&255) + .0722*(n&255); };
+              if ((L(palette.surface) < 128) ===
+                  (L(palette.tertiaryContainer) > L(palette.onTertiaryContainer))) {
+                var t = palette.tertiaryContainer;
+                palette.tertiaryContainer = palette.onTertiaryContainer;
+                palette.onTertiaryContainer = t;
+              }
+
               window.__dynamicColors = palette;
 
               Object.entries(palette).forEach(function (entry) {
