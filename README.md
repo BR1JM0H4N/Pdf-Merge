@@ -7,11 +7,6 @@
 **Combine multiple PDF files into one, right in your browser.**
 A single HTML file. No server, no uploads, no sign-up.
 
-[![License: MIT](https://img.shields.io/github/license/USERNAME/REPO?style=for-the-badge&color=BCCBB1&labelColor=22271E)](LICENSE)
-[![Last commit](https://img.shields.io/github/last-commit/USERNAME/REPO?style=for-the-badge&color=BCCBB1&labelColor=22271E)](https://github.com/USERNAME/REPO/commits/main)
-[![Stars](https://img.shields.io/github/stars/USERNAME/REPO?style=for-the-badge&color=BCCBB1&labelColor=22271E)](https://github.com/USERNAME/REPO/stargazers)
-[![Forks](https://img.shields.io/github/forks/USERNAME/REPO?style=for-the-badge&color=BCCBB1&labelColor=22271E)](https://github.com/USERNAME/REPO/network/members)
-[![Issues](https://img.shields.io/github/issues/USERNAME/REPO?style=for-the-badge&color=BCCBB1&labelColor=22271E)](https://github.com/USERNAME/REPO/issues)
 
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white)
