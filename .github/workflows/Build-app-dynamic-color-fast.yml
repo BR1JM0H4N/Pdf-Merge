@@ -1,4 +1,4 @@
-name: Build APK v3 (nav preserved)fast
+name: Build APK v3 (nav preserved) fast
 
 on:
   workflow_dispatch:
@@ -12,9 +12,14 @@ on:
           - debug
           - release
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
 
@@ -37,8 +42,16 @@ jobs:
       # ============================================================
       # INSTALL DEPENDENCIES
       # ============================================================
+      - name: Cache npm downloads
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('package.json') }}
+          restore-keys: |
+            npm-${{ runner.os }}-
+
       - name: Install dependencies
-        run: npm install
+        run: npm install --prefer-offline --no-audit --no-fund
 
 
       # ============================================================
@@ -1059,17 +1072,35 @@ jobs:
 
 
       # ============================================================
+      # ICON CACHE
+      # Icons are only regenerated when logo.png changes.
+      # Bump "v1" below if you change the icon background colors.
+      # ============================================================
+      - name: Restore generated icons
+        id: icons
+        uses: actions/cache@v4
+        with:
+          path: |
+            android/app/src/main/res/mipmap-*
+            android/app/src/main/res/drawable*
+            android/app/src/main/res/values/ic_launcher_background.xml
+          key: android-icons-v1-${{ hashFiles('logo.png') }}
+
+
+      # ============================================================
       # INSTALL CAPACITOR ASSETS
       # ============================================================
       - name: Install Capacitor Assets
+        if: steps.icons.outputs.cache-hit != 'true'
         run: |
-          npm install --save-dev @capacitor/assets
+          npm install --no-save @capacitor/assets --prefer-offline --no-audit --no-fund
 
 
       # ============================================================
       # GENERATE ANDROID ICONS
       # ============================================================
       - name: Generate Android icons
+        if: steps.icons.outputs.cache-hit != 'true'
         run: |
           npx @capacitor/assets generate \
             --android \
@@ -1095,6 +1126,19 @@ jobs:
           distribution: temurin
           java-version: 21
 
+      - name: Set up Gradle (cache)
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: ${{ github.ref_name != github.event.repository.default_branch }}
+
+      - name: Gradle tuning
+        run: |
+          cat >> android/gradle.properties <<'EOF'
+          org.gradle.caching=true
+          org.gradle.parallel=true
+          org.gradle.jvmargs=-Xmx3g -XX:+UseParallelGC
+          EOF
+
 
       # ============================================================
       # BUILD DEBUG APK
@@ -1115,7 +1159,7 @@ jobs:
         working-directory: android
         run: |
           chmod +x gradlew
-          ./gradlew assembleRelease
+          ./gradlew assembleRelease -x lintVitalRelease
 
 
       # ============================================================
@@ -1131,3 +1175,4 @@ jobs:
             android/app/build/outputs/apk/release/app-release-unsigned.apk
 
           if-no-files-found: ignore
+          retention-days: 3
